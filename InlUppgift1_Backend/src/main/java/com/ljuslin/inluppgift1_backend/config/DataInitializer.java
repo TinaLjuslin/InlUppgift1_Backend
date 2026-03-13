@@ -54,15 +54,15 @@ public class DataInitializer {
                 Address address3 = new Address("Ceasarstreet 78", "123 45", "Carlshamn");
                 addressRepository.saveAll(List.of(address1, address2, address3));
                 Member member1 = new Member("Anna", "Andersson", "anna@mail.se", "070-1111111",
-                        "19810101-0101", address1);
+                        "19810101-0101", address1, admin1);
                 Member member2 = new Member("Bettan", "Bengtsson", "bettan@mail.se", "070-2222222",
-                        "19820202-0202", address1);
+                        "19820202-0202", address1, user1);
                 Member member3 = new Member("Ceasar", "Carlsson", "ceasar@mail.se", "070-3333333",
-                        "19830303-0303", address2);
+                        "19830303-0303", address2, user2);
                 Member member4 = new Member("Daniel", "Danielsson", "daniel@mail.se", "070-4444444",
-                        "19840404-0404", address3);
+                        "19840404-0404", address3, user3);
                 Member member5 = new Member("Erik", "Eriksson", "erik@mail.se", "070-5555555",
-                        "19850505-0505", address3);
+                        "19850505-0505", address3, user4);
                 admin1.setMember(member1);
                 user1.setMember(member2);
                 user2.setMember(member3);

@@ -21,8 +21,8 @@ public class ApiExceptionHandler {
                 )
         );
     }
-    @ExceptionHandler(IllegalIdException.class)
-    public ResponseEntity<?> handleIllegalId(IllegalIdException ex) {
+    @ExceptionHandler(IllegalDataException.class)
+    public ResponseEntity<?> handleIllegalData(IllegalDataException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 Map.of(
                         "timeStamp", LocalDateTime.now().toString(),
@@ -32,8 +32,8 @@ public class ApiExceptionHandler {
                 )
         );
     }
-    @ExceptionHandler(DateOfBirthAlreadyExistsException.class)
-    public ResponseEntity<?> handleIllegalDateOfBirth(DateOfBirthAlreadyExistsException ex) {
+    @ExceptionHandler(DataConflictException.class)
+    public ResponseEntity<?> handleDataConflict(DataConflictException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
                 Map.of(
                         "timeStamp", LocalDateTime.now().toString(),
@@ -43,24 +43,13 @@ public class ApiExceptionHandler {
                 )
         );
     }
-    @ExceptionHandler(UsernameAlreadyExistsException.class)
-    public ResponseEntity<?> handleIllegalUsername(UsernameAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+    @ExceptionHandler(IllegalActionException.class)
+    public ResponseEntity<?> handleIllegalAction(IllegalActionException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
                 Map.of(
                         "timeStamp", LocalDateTime.now().toString(),
-                        "status", HttpStatus.CONFLICT.value(),
-                        "error", "Conflict",
-                        "message", ex.getMessage()
-                )
-        );
-    }
-    @ExceptionHandler(IllegalPasswordException.class)
-    public ResponseEntity<?> handleIllegalUsername(IllegalPasswordException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                Map.of(
-                        "timeStamp", LocalDateTime.now().toString(),
-                        "status", HttpStatus.BAD_REQUEST.value(),
-                        "error", "Bad request",
+                        "status", HttpStatus.FORBIDDEN.value(),
+                        "error", "Forbidden",
                         "message", ex.getMessage()
                 )
         );

@@ -1,12 +1,11 @@
 package com.ljuslin.inluppgift1_backend.service;
 
-import com.ljuslin.inluppgift1_backend.dto.CreateMemberDto;
-import com.ljuslin.inluppgift1_backend.dto.MemberForAdminDto;
-import com.ljuslin.inluppgift1_backend.dto.UpdateMemberDto;
+import com.ljuslin.inluppgift1_backend.dto.*;
 import com.ljuslin.inluppgift1_backend.entity.Address;
 import com.ljuslin.inluppgift1_backend.entity.Member;
-import com.ljuslin.inluppgift1_backend.exception.DateOfBirthAlreadyExistsException;
-import com.ljuslin.inluppgift1_backend.exception.IllegalPasswordException;
+import com.ljuslin.inluppgift1_backend.exception.DataConflictException;
+import com.ljuslin.inluppgift1_backend.exception.IllegalActionException;
+import com.ljuslin.inluppgift1_backend.exception.IllegalDataException;
 import com.ljuslin.inluppgift1_backend.exception.MemberNotFoundException;
 import com.ljuslin.inluppgift1_backend.mapper.MemberMapper;
 import com.ljuslin.inluppgift1_backend.repository.AddressRepository;
@@ -15,9 +14,11 @@ import com.ljuslin.inluppgift1_backend.repository.MemberRepository;
 import com.ljuslin.inluppgift1_backend.security.AppUser;
 import com.ljuslin.inluppgift1_backend.security.Role;
 import jakarta.transaction.Transactional;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public List<MemberForAdminDto> findAllMembers() {
+    public List<MemberAdminDto> findAllMembers() {
         return memberRepository.findAll()
                 .stream()
                 .map(MemberMapper::toMemberForAdminDto)
@@ -50,8 +51,18 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('USER')")
+    public List<MemberUserDto> findAllMembersForUser() {
+        return memberRepository.findAll()
+                .stream()
+                .map(MemberMapper::toMemberForUserDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public MemberForAdminDto findMemberById(Long id) {
+    public MemberAdminDto findMemberById(Long id) {
         return memberRepository.findById(id)
                 .map(MemberMapper::toMemberForAdminDto)
                 .orElseThrow(() -> new MemberNotFoundException(id));
@@ -60,33 +71,20 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public MemberForAdminDto updateMember(Long id, UpdateMemberDto dto) {
+    public MemberAdminDto updateMember(Long id, UpdateMemberAdminDto dto) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new MemberNotFoundException(id));
-        member.setId(id);
         member.setFirstName(dto.firstName());
         member.setLastName(dto.lastName());
         member.setEmail(dto.email());
         member.setPhone(dto.phone());
-
-        if (memberRepository.existsByDateOfBirthAndIdNot(dto.dateOfBirth(), id)) {
-            throw new DateOfBirthAlreadyExistsException();
-        }
+        checkDateOfBirth(dto.dateOfBirth(), id);
         member.setDateOfBirth(dto.dateOfBirth());
-
+        checkUsername(dto.username(), id);
         member.getAppUser().setUsername(dto.username());
-        if (dto.password() != null && !dto.password().isBlank()) {
-            member.getAppUser().setPassword(passwordEncoder.encode(dto.password()));
-        } else {
-            throw new IllegalPasswordException(dto.password());
-        }
+        member.getAppUser().setPassword(checkAndEncodePassword(dto.password()));
         member.getAppUser().setRole(dto.role());
-        Address address = addressRepository.findByStreetAndPostalCodeAndCity(
-                        dto.address().street(), dto.address().postalCode(), dto.address().city())
-                .orElseGet(() ->
-                        addressRepository.save(new Address(dto.address().street(), dto.address().postalCode(),
-                                dto.address().city())));
-        member.setAddress(address);
+        member.setAddress(checkAndGetAddress(dto.address().street(), dto.address().postalCode(), dto.address().city()));
         Member savedMember = memberRepository.save(member);
         return MemberMapper.toMemberForAdminDto(savedMember);
     }
@@ -94,7 +92,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public MemberForAdminDto updateMember(Long id, Map<String, Object> fields) {
+    public MemberAdminDto updateMember(Long id, Map<String, Object> fields) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new MemberNotFoundException(id));
         fields.forEach((key, value) -> {
@@ -104,17 +102,16 @@ public class MemberServiceImpl implements MemberService {
                 case "email" -> member.setEmail((String) value);
                 case "phone" -> member.setPhone((String) value);
                 case "dateOfBirth" -> {
-                    if (memberRepository.existsByDateOfBirthAndIdNot((String) value, id)) {
-                        throw new DateOfBirthAlreadyExistsException();
-                    }
+                    checkDateOfBirth((String) value, id);
                     member.setDateOfBirth((String) value);
                 }
-                case "username" -> member.getAppUser().setUsername((String) value);
-                case "password" -> member.getAppUser().setPassword((String) value);
-                case "role" -> //kolla så roll stämmer
-
-                        member.getAppUser().setRole((Role) value);
-                // value);
+                case "username" -> {
+                    checkUsername((String) value, id);
+                    member.getAppUser().setUsername((String) value);
+                }
+                case "password" ->
+                        member.getAppUser().setPassword(checkAndEncodePassword((String) value));
+                case "role" -> member.getAppUser().setRole((Role) value);
                 case "address" -> {
                     Map<String, String> addressFields = (Map<String, String>) value;
                     String street = addressFields.getOrDefault("street",
@@ -123,13 +120,8 @@ public class MemberServiceImpl implements MemberService {
                             member.getAddress().getPostalCode());
                     String city = addressFields.getOrDefault("city",
                             member.getAddress().getCity());
-                    Address address =
-                            addressRepository.findByStreetAndPostalCodeAndCity(street,
-                                    postalCode, city).orElseGet(() ->
-                                    addressRepository.save(new Address(street, postalCode,
-                                            city)));
 
-                    member.setAddress(address);
+                    member.setAddress(checkAndGetAddress(street, postalCode, city));
                 }
             }
         });
@@ -140,14 +132,103 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('USER')")
+    public MemberUserDto updateMemberUser(Long id, UpdateMemberUserDto dto) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new MemberNotFoundException(id));
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!currentUser.equals(member.getAppUser().getUsername())) {
+            throw new AccessDeniedException("Du har inte tillgång till denna användare.");
+        }
+        checkDateOfBirth(dto.dateOfBirth(), id);
+        member.setId(id);
+        member.setFirstName(dto.firstName());
+        member.setLastName(dto.lastName());
+        member.setEmail(dto.email());
+        member.setPhone(dto.phone());
+        member.setDateOfBirth(dto.dateOfBirth());
+        member.setAddress(checkAndGetAddress(dto.address().street(), dto.address().postalCode(), dto.address().city()));
+        Member savedMember = memberRepository.save(member);
+        return MemberMapper.toMemberForUserDto(savedMember);
+
+    }
+
+    @Override
+    @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public MemberForAdminDto createMember(CreateMemberDto dto) {
-        //kolla dateOfBirth
-        //kolla username
+    public MemberAdminDto createMember(CreateMemberDto dto) {
+        checkDateOfBirth(dto.dateOfBirth());
+        checkUsername(dto.username());
+        //member_id sparas inte i app user
+        AppUser appUser = new AppUser(dto.username(), checkAndEncodePassword(dto.password()),
+                dto.role());
+        Member member = new Member(
+                dto.firstName(),
+                dto.lastName(),
+                dto.email(),
+                dto.phone(),
+                dto.dateOfBirth(),
+                checkAndGetAddress(dto.address().street(), dto.address().postalCode(),
+                        dto.address().city()),
+                appUser
+        );
+        appUser.setMember(member);
+        Member savedMember = memberRepository.save(member);
+        return MemberMapper.toMemberForAdminDto(savedMember);
+    }
 
+    @Override
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteMember(Long id) {
+        Member memberToDelete = memberRepository.findById(id)
+                .orElseThrow(() -> new MemberNotFoundException(id));
+        String currentUsername = SecurityContextHolder
+                .getContext().getAuthentication().getName();
 
-        return null;
+        if (memberToDelete.getAppUser().getUsername().equals(currentUsername)) {
+            throw new IllegalActionException("Du kan inte radera ditt eget konto!");
+        }
+        memberRepository.deleteById(id);
+    }
+
+    private void checkUsername(String username, Long id) {
+        if (memberRepository.existsByAppUserUsernameAndIdNot(username, id)) {
+            throw new DataConflictException("Användarnamn är upptaget.");
+        }
+    }
+
+    private void checkUsername(String username) {
+        if (appUserRepository.existsByUsername(username)) {
+            throw new DataConflictException("Användarnamn är upptaget.");
+        }
+    }
+
+    private String checkAndEncodePassword(String password) {
+        if (password != null && !password.isBlank()) {
+            return passwordEncoder.encode(password);
+        } else {
+            throw new IllegalDataException(password);
+        }
+    }
+
+    private void checkDateOfBirth(String dateOfBirth, Long id) {
+        if (memberRepository.existsByDateOfBirthAndIdNot(dateOfBirth, id)) {
+            throw new DataConflictException("Personnummer används redan.");
+        }
+    }
+
+    private void checkDateOfBirth(String dateOfBirth) {
+        if (memberRepository.existsByDateOfBirth(dateOfBirth)) {
+            throw new DataConflictException("Personnummer används redan.");
+        }
+    }
+
+    private Address checkAndGetAddress(String street, String postalCode, String city) {
+        return addressRepository.findByStreetAndPostalCodeAndCity(street,
+                postalCode, city).orElseGet(() ->
+                addressRepository.save(new Address(street, postalCode,
+                        city)));
+
     }
 }
-/*@PreAuthorize("hasRole('ADMIN') or #email == authentication.principal.username")
-public MemberForAdminDto update(String email, MemberUpdateDto dto) { ... }*/

@@ -28,6 +28,13 @@ public class Address {
         this.city = city;
     }
 
+    public Address(Long id, String street, String postalCode, String city) {
+        this.id = id;
+        this.street = street;
+        this.postalCode = postalCode;
+        this.city = city;
+    }
+
     public Long getId() {
         return id;
     }

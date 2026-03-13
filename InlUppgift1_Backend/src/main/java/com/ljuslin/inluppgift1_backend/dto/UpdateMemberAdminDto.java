@@ -2,7 +2,7 @@ package com.ljuslin.inluppgift1_backend.dto;
 
 import com.ljuslin.inluppgift1_backend.security.Role;
 
-public record UpdateMemberDto(
+public record UpdateMemberAdminDto(
         String firstName,
         String lastName,
         String email,
@@ -11,6 +11,6 @@ public record UpdateMemberDto(
         String username,
         String password,
         Role role,
-        AddressDto address
+        AddressAdminDto address
 ) {
 }

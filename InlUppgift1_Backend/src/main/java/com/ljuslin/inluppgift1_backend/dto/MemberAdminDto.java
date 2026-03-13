@@ -2,7 +2,7 @@ package com.ljuslin.inluppgift1_backend.dto;
 
 import com.ljuslin.inluppgift1_backend.security.Role;
 
-public record MemberForAdminDto(
+public record MemberAdminDto(
     Long id,
     String firstName,
     String lastName,
@@ -12,7 +12,7 @@ public record MemberForAdminDto(
     String username,
     String password,
     Role role,
-    AddressDto address
+    AddressAdminDto address
     //roll?
 )
 {}

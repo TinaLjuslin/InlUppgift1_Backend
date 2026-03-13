@@ -1,16 +1,16 @@
 package com.ljuslin.inluppgift1_backend.mapper;
 
-import com.ljuslin.inluppgift1_backend.dto.AddressDto;
-import com.ljuslin.inluppgift1_backend.dto.MemberForAdminDto;
+import com.ljuslin.inluppgift1_backend.dto.AddressAdminDto;
+import com.ljuslin.inluppgift1_backend.dto.AddressUserDto;
+import com.ljuslin.inluppgift1_backend.dto.MemberAdminDto;
+import com.ljuslin.inluppgift1_backend.dto.MemberUserDto;
 import com.ljuslin.inluppgift1_backend.entity.Address;
 import com.ljuslin.inluppgift1_backend.entity.Member;
 
 public final class MemberMapper {
-/*public static fromMemberDto(MemberWithAddressDTO memberDto) {
 
-}*/
-    public static MemberForAdminDto toMemberForAdminDto(Member member) {
-        MemberForAdminDto memberDto = new MemberForAdminDto(
+    public static MemberAdminDto toMemberForAdminDto(Member member) {
+        MemberAdminDto memberDto = new MemberAdminDto(
                 member.getId(),
                 member.getFirstName(),
                 member.getLastName(),
@@ -20,35 +20,48 @@ public final class MemberMapper {
                 member.getAppUser().getUsername(),
                 member.getAppUser().getPassword(),
                 member.getAppUser().getRole(),
-                toAddressDto(member.getAddress())
+                toAddressAdminDto(member.getAddress())
         );
         return memberDto;
+    }
+
+    public static MemberUserDto toMemberForUserDto(Member member) {
+        MemberUserDto dto = new MemberUserDto(
+
+                member.getFirstName(),
+                member.getLastName(),
+                member.getEmail(),
+                member.getPhone(),
+                toAddressUserDto(member.getAddress())
+        );
+        return dto;
 
     }
-    private static AddressDto toAddressDto(Address address) {
-        AddressDto addressDto = new AddressDto(address.getStreet(),
+
+    private static AddressAdminDto toAddressAdminDto(Address address) {
+        AddressAdminDto addressDto = new AddressAdminDto(
+                address.getId(),
+                address.getStreet(),
                 address.getPostalCode(),
                 address.getCity());
-return addressDto;
+        return addressDto;
     }
-    private static Address toAddressFromDto(AddressDto dto) {
-        Address address = new Address(dto.street(),
+
+    private static AddressUserDto toAddressUserDto(Address address) {
+        AddressUserDto addressDto = new AddressUserDto(
+                address.getStreet(),
+                address.getPostalCode(),
+                address.getCity());
+        return addressDto;
+    }
+
+    private static Address toAddressFromDto(AddressAdminDto dto) {
+        Address address = new Address(
+                dto.id(),
+                dto.street(),
                 dto.postalCode(),
                 dto.city());
         return address;
     }
-/*
-//ej korrekt!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    public static void applyUpdate(Member member, MemberUpdateDto dto) {
-        Address address = member.getAddress();
-        if (address == null) {
-            address = new Address(dto.address().street(), dto.address().postalCode(), dto.address().city());
-            member.setAddress(address);
-        } else {
-            member.getAddress().setStreet(dto.address().street());
-            member.getAddress().setPostalCode(dto.address().postalCode());
-            member.getAddress().setCity(dto.address().city());
-        }
-    }*/
 
 }

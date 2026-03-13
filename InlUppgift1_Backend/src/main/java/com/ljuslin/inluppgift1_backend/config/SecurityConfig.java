@@ -21,9 +21,10 @@ public class SecurityConfig {
                         .frameOptions(frame -> frame.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN").requestMatchers(HttpMethod.GET, "/mypages/members/**")
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/mypages/members/**")
                         .hasRole("USER")
-                        .requestMatchers(HttpMethod.PUT, "/mypages/members/**")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/mypages/members/**")
                         .hasRole("USER")
                         .anyRequest().authenticated()
                 )

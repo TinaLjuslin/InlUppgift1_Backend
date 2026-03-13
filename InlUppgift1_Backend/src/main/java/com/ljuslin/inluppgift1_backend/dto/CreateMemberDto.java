@@ -11,7 +11,11 @@ public record CreateMemberDto(
         String username,
         String password,
         Role role,
-        AddressDto address
-
+        CreateAddressDto address
+        /*@Past and @PastOrPresent validate that a date value is in the past, or the past including
+        the present. We can apply it to date types, including those added in Java 8.
+        Så om man använder LocalDateTime som dateOfBirth kan man bara annotera med @Past
+        Typ: "@Past(message = "Date of birth must be in the past")"
+        */
 ) {
 }

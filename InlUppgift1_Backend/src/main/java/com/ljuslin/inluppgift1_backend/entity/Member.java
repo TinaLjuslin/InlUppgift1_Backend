@@ -37,7 +37,7 @@ public class Member {
 
     protected Member() {
     }
-
+/*
     public Member(String firstName, String lastName, String email, String phone, String dateOfBirth, Address adress) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -45,6 +45,16 @@ public class Member {
         this.phone = phone;
         this.dateOfBirth = dateOfBirth;
         this.address = adress;
+    }*/
+
+    public Member(String firstName, String lastName, String email, String phone, String dateOfBirth, Address address, AppUser appUser) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phone = phone;
+        this.dateOfBirth = dateOfBirth;
+        this.address = address;
+        this.appUser = appUser;
     }
 
     public Long getId() {
