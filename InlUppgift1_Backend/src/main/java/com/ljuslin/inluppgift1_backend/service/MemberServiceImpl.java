@@ -159,7 +159,6 @@ public class MemberServiceImpl implements MemberService {
     public MemberAdminDto createMember(CreateMemberDto dto) {
         checkDateOfBirth(dto.dateOfBirth());
         checkUsername(dto.username());
-        //member_id sparas inte i app user
         AppUser appUser = new AppUser(dto.username(), checkAndEncodePassword(dto.password()),
                 dto.role());
         Member member = new Member(
@@ -229,6 +228,5 @@ public class MemberServiceImpl implements MemberService {
                 postalCode, city).orElseGet(() ->
                 addressRepository.save(new Address(street, postalCode,
                         city)));
-
     }
 }

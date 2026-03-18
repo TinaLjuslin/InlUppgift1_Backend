@@ -46,9 +46,6 @@ public class DataInitializer {
                         passwordEncoder.encode("user4"),
                         Role.USER
                 );
-                System.out.println("Skapat admin1, user1, user2, password samma som user");
-                /*String firstName, String lastName, String email, String phone, String dateOfBirth, Address
-                adress*/
                 Address address1 = new Address("Alfavägen 12", "835 95", "Askersund");
                 Address address2 = new Address("Betagatan 34", "789 56", "Betinge");
                 Address address3 = new Address("Ceasarstreet 78", "123 45", "Carlshamn");

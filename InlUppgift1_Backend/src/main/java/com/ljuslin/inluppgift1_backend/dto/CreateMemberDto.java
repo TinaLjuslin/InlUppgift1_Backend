@@ -1,21 +1,19 @@
 package com.ljuslin.inluppgift1_backend.dto;
 
 import com.ljuslin.inluppgift1_backend.security.Role;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public record CreateMemberDto(
-        String firstName,
-        String lastName,
-        String email,
-        String phone,
-        String dateOfBirth,
-        String username,
-        String password,
+        @NotBlank @Size(max = 50)String firstName,
+        @NotBlank @Size(max = 100)String lastName,
+        @NotBlank @Size(max = 100) @Email String email,
+        @Size(max = 20) String phone,
+        @NotBlank @Size(max = 20) String dateOfBirth,
+        @NotBlank @Size(max = 50) String username,
+        @NotBlank @Size(min = 4, max = 100)String password,
         Role role,
         CreateAddressDto address
-        /*@Past and @PastOrPresent validate that a date value is in the past, or the past including
-        the present. We can apply it to date types, including those added in Java 8.
-        Så om man använder LocalDateTime som dateOfBirth kan man bara annotera med @Past
-        Typ: "@Past(message = "Date of birth must be in the past")"
-        */
 ) {
 }

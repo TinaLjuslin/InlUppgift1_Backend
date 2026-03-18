@@ -1,8 +1,6 @@
 package com.ljuslin.inluppgift1_backend.entity;
 
 import jakarta.persistence.*;
-/*Address ska innehålla id, street, postalCode, city. En medlem kan endast ha en adress, men en adress
-kan kopplas till flera medlemmar*/
 @Entity
 @Table(name = "address")
 public class Address {
@@ -10,7 +8,7 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "street", length = 100, nullable = false)
+    @Column(name = "street", length = 50, nullable = false)
     private String street;
 
     @Column(name = "postal_code", length = 10, nullable = false)

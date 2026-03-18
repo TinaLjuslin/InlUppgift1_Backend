@@ -1,13 +1,11 @@
 package com.ljuslin.inluppgift1_backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public record CreateAddressDto(
-        String street,
-        String postalCode,
-        String city
+        @NotBlank @Size(max = 50)String street,
+        @NotBlank @Size(max = 10)String postalCode,
+        @NotBlank @Size(max = 50)String city
 ) {
 }
-/*kolla upp @Pattern
-@NotBlank
-    @Pattern(regexp = "^\d{5}$", message = "Postal code must be exactly 5 digits")
-    String postalCode,
- */
